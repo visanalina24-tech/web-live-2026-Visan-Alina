@@ -1,0 +1,13 @@
+body {
+  font-family: system-ui, sans-serif;
+  max-width: 40rem;
+  margin: 3rem auto;
+}
+li {
+  display: flex;
+  gap: 0.7rem;
+  margin: 0.5rem;
+}
+.completed .task-title {
+  text-decoration: line-through;
+}

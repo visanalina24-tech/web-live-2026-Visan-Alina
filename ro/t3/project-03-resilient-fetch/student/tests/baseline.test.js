@@ -1,0 +1,19 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { checkStatus } from "../public/status-controller.js";
+test("controllerul randează starea loading și starea finală fără respingere", async () => {
+  for (const policy of [
+    async () => ({ ok: true }),
+    async () => {
+      throw Error("offline");
+    },
+  ]) {
+    const states = [];
+    const result = await checkStatus({
+      policy,
+      render: (m) => states.push(m.state),
+    });
+    assert.equal(states[0], "loading");
+    assert.equal(states.at(-1), result.state);
+  }
+});
