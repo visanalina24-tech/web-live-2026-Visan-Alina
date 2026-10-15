@@ -1,31 +1,31 @@
 {
   "stylesheet": {
-    "method": "TODO",
-    "pathname": "TODO",
-    "query": { "TODO": "TODO" },
-    "requestMediaType": "TODO",
-    "status": null,
-    "responseMediaType": "TODO",
-    "bodyRepresentation": "TODO"
+    "method": "GET",
+    "pathname": "/assets/detective.css",
+    "query": { },
+    "requestMediaType": null,
+    "status": 200,
+    "responseMediaType": "text/css",
+    "bodyRepresentation": "text"
   },
   "clues": {
-    "method": "TODO",
-    "pathname": "TODO",
-    "query": { "TODO": "TODO" },
-    "requestMediaType": "TODO",
-    "status": null,
-    "responseMediaType": "TODO",
-    "bodyRepresentation": "TODO",
-    "xCaseId": "TODO"
+    "method": "GET",
+    "pathname": "/api/clues",
+    "query": { "case": "missing-cookie"},
+    "requestMediaType": null,
+    "status": 200,
+    "responseMediaType": "application/json",
+    "bodyRepresentation": "json",
+    "xCaseId": "missing-cookie"
   },
   "verdict": {
-    "method": "TODO",
-    "pathname": "TODO",
-    "query": { "TODO": "TODO" },
-    "requestMediaType": "TODO",
-    "status": null,
-    "responseMediaType": "TODO",
-    "bodyRepresentation": "TODO",
-    "location": "TODO"
+    "method": "POST",
+    "pathname": "/api/verdicts",
+    "query": { },
+    "requestMediaType": "application/json",
+    "status": 201,
+    "responseMediaType": "application/json",
+    "bodyRepresentation": "json",
+    "location": "/api/verdicts/verdict-1"
   }
 }
