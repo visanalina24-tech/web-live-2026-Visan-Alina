@@ -53,11 +53,17 @@ export function createServer() {
 
         const text = input?.text?.trim();
         if (!text) {
-          // TODO: oprește execuția după trimiterea răspunsului de validare.
-          response.writeHead(422, {
-            'content-type': 'application/json; charset=utf-8',
-          });
-          response.destroy(new Error('headerele au fost deja trimise'));
+           sendJson(response, {
+    status: 422,
+    headers: {},
+    body: {
+      error: {
+        code: 'text_required',
+        message: 'Textul este obligatoriu',
+      },
+    },
+  });
+  return;
         }
 
         if (text) {

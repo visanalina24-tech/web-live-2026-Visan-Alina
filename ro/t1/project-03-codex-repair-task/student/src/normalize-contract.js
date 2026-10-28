@@ -25,6 +25,28 @@ export function normalizeContract(operation, legacyResult) {
    * server, iar `curl -i` confirmă contractele descrise în specificație pentru
    * listare și resursa inexistentă.
    */
-  void operation;
+    if (operation === 'list') {
+    return {
+      ...legacyResult,
+      headers: {
+        ...legacyResult.headers,
+        'content-type': 'application/json; charset=utf-8',
+      },
+    };
+  }
+
+  if (operation === 'missing') {
+    return {
+      status: 404,
+      headers: {},
+      body: {
+        error: {
+          code: 'clue_not_found',
+          message: 'Indiciul nu a fost găsit',
+        },
+      },
+    };
+  }
+
   return legacyResult;
 }
