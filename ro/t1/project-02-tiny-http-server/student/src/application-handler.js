@@ -14,9 +14,18 @@ export async function handleApplicationRequest(request, response, url) {
 
   const greetingPrefix = '/api/greetings/';
   if (request.method === 'GET' && url.pathname.startsWith(greetingPrefix)) {
-    // TODO: handle GET /api/greetings/<name> by decoding the final path
-    // segment, trimming it, and returning the documented JSON response.
-    return false;
+    const rest = url.pathname.slice(greetingPrefix.length);
+    if (rest.includes('/')) return false;
+
+    const name = decodeURIComponent(rest).trim();
+
+    if (!name) {
+      sendJson(response, 400, { error: 'name_required' });
+      return true;
+    }
+
+    sendJson(response, 200, { message: `Hello, ${name}!`, source: 'path' });
+    return true;
   }
 
   if (request.method === 'POST' && url.pathname === '/api/echo') {
