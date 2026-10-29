@@ -1,4 +1,3 @@
-export function transformTasks(tasks, options = {}) {
   /*
    * TODO: construiește transformarea defensivă descrisă în `spec.md`.
    *
@@ -20,7 +19,34 @@ export function transformTasks(tasks, options = {}) {
    * în afara domeniului. Rulează toate verificările, compară manual ieșirea aplicației
    * și explică fiecare etapă înainte să accepți rezultatul.
    */
-  void tasks;
-  void options;
-  return { tasks: [], count: 0, totalEstimate: 0, owners: [] };
-}
+  export function transformTasks(tasks, options = {}) {
+  if (!Array.isArray(tasks)) {
+    throw new TypeError('tasks trebuie să fie un tablou');
+  }
+
+  const { owner, minimumEstimate = 0 } = options;
+
+  const result = tasks
+    // 1. filtrare
+    .filter((task) => task.status === 'open')
+    .filter((task) => owner === undefined || task.owner === owner)
+    .filter((task) => task.estimate >= minimumEstimate)
+    // 2. proiectare: obiecte noi, doar câmpurile cerute
+    .map((task) => ({
+      id: task.id,
+      title: task.title.trim(),
+      owner: task.owner,
+      estimate: task.estimate,
+    }))
+    // 3. sortare (pe copia creată de map, nu pe lista de intrare)
+    .sort((a, b) => a.id.localeCompare(b.id));
+
+  // 4. sumar, din rezultatul final
+  return {
+    tasks: result,
+    count: result.length,
+    totalEstimate: result.reduce((sum, task) => sum + task.estimate, 0),
+    owners: [...new Set(result.map((task) => task.owner))].sort(),
+  };
+  }
+
