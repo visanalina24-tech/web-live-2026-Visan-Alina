@@ -1,35 +1,69 @@
+const leafOperators = {
+  // comparatie stricta, fara conversie
+  equals: (actual, expected) => actual === expected,
+  // doar numere: '4' nu conteaza ca 4
+  atLeast: (actual, expected) =>
+    typeof actual === 'number' && typeof expected === 'number' && actual >= expected,
+  // doar tablouri
+  includes: (actual, expected) => Array.isArray(actual) && actual.includes(expected),
+};
+
 export function compileRule(definition) {
-  /*
-   * TODO: validează un arbore declarativ de reguli și compilează-l într-un
-   * predicat reutilizabil, conform `spec.md`.
-   *
-   * Înainte să editezi, rulează verificările țintite și desenează arborele
-   * furnizat. Cere IA—fără să autorizezi schimbări—să identifice fiecare tip de
-   * regulă, contractul strict al operatorilor, cazul de
-   * bază sau compus recursiv și ce capturează fiecare închidere. Verifică
-   * explicația față de teste.
-   *
-   * Apoi permite schimbări doar în acest fișier. Respinge propunerile care
-   * evaluează cod dinamic, convertesc valori,
-   * recompilează fiii la fiecare înregistrare, modifică intrarea sau testele.
-   * Examinează diferența și rulează verificările tipurilor
-   * stricte, compunerii și scurtcircuitării înainte să accepți predicatul.
-   */
-  void definition;
-  return () => false;
+  if (typeof definition !== 'object' || definition === null || Array.isArray(definition)) {
+    throw new TypeError('regula trebuie sa fie un obiect');
+  }
+
+  const keys = Object.keys(definition);
+
+  // regula compusa: exact o cheie, all / any / not
+  if ('all' in definition || 'any' in definition || 'not' in definition) {
+    if (keys.length !== 1) {
+      throw new TypeError('o regula compusa are exact o forma');
+    }
+
+    if ('not' in definition) {
+      const child = compileRule(definition.not); // compilat o singura data
+      return (record) => !child(record);
+    }
+
+    const kind = 'all' in definition ? 'all' : 'any';
+    const list = definition[kind];
+    if (!Array.isArray(list) || list.length === 0) {
+      throw new TypeError(`${kind} trebuie sa fie un tablou nevid`);
+    }
+
+    const children = list.map(compileRule); // compilati o singura data
+    return kind === 'all'
+      ? (record) => children.every((child) => child(record))
+      : (record) => children.some((child) => child(record));
+  }
+
+  // regula-frunza: field, operator, value
+  const { field, operator } = definition;
+  if (typeof field !== 'string' || !('value' in definition)) {
+    throw new TypeError('regula-frunza are nevoie de field si value');
+  }
+  if (!Object.hasOwn(leafOperators, operator)) {
+    throw new TypeError('operator necunoscut');
+  }
+
+  const compare = leafOperators[operator];
+  const expected = definition.value;
+  // inchiderea tine minte field, compare si expected
+  return (record) => compare(record?.[field], expected);
 }
 
 export function evaluateRecords(records, definition) {
-  /*
-   * TODO: validează colecția de înregistrări, compilează definiția o singură
-   * dată și partiționează identificatorii în ordinea originală, fără mutație.
-   *
-   * Cere IA să urmărească momentul compilării și cum ajunge o înregistrare în
-   * exact o partiție înainte să editeze. Apoi caută în diferență compilări
-   * repetate, conversii ascunse, intrări reordonate sau domeniu extins; rulează
-   * întreaga suită și explică singur arborele de predicate rezultat.
-   */
-  void records;
-  void definition;
-  return { matchedIds: [], rejectedIds: [] };
+  if (!Array.isArray(records)) {
+    throw new TypeError('records trebuie sa fie un tablou');
+  }
+
+  const predicate = compileRule(definition); // o singura data
+
+  const matchedIds = [];
+  const rejectedIds = [];
+  for (const record of records) {
+    (predicate(record) ? matchedIds : rejectedIds).push(record.id);
+  }
+  return { matchedIds, rejectedIds };
 }
