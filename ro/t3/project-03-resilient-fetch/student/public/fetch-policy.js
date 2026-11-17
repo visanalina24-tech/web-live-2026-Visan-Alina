@@ -19,8 +19,42 @@ export async function singleAttempt(fetchImpl, url, signal) {
 }
 
 export async function fetchWithPolicy(url, options = {}) {
-  // TODO: adăugați timeout, clasificarea reîncercărilor, backoff, curățare și contextul epuizării încercărilor.
-  const fetchImpl = options.fetchImpl ?? fetch;
-  const controller = options.createController?.() ?? new AbortController();
-  return singleAttempt(fetchImpl, url, controller.signal);
+  const {
+    fetchImpl = fetch,
+    timeoutMs = 1000,
+    retries = 2,
+    sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    createController = () => new AbortController(),
+    setTimer = (fn, ms) => setTimeout(fn, ms),
+    clearTimer = (id) => clearTimeout(id),
+  } = options;
+
+  const maxAttempts = retries + 1;
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    if (attempt > 1) {
+      // inainte de reincercarea N: 50 * 2 ** (N - 1)
+      await sleep(50 * 2 ** (attempt - 2));
+    }
+
+    
+    const controller = createController();
+    const timer = setTimer(() => controller.abort(), timeoutMs);
+
+    try {
+      return await singleAttempt(fetchImpl, url, controller.signal);
+    } catch (error) {
+      if (error.retryable === false) throw error; 
+      if (error.retryable !== true) throw error;  
+      lastError = error;
+    } finally {
+      clearTimer(timer); 
+    }
+  }
+
+  throw new Error(
+    `request failed after ${maxAttempts} attempts: ${lastError.message}`,
+    { cause: lastError }
+  );
 }
